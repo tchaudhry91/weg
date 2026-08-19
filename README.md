@@ -1,2 +1,0 @@
-# weg
-Shell AutoJump
