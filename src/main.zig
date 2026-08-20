@@ -3,29 +3,43 @@ const Io = std.Io;
 
 const weg = @import("weg");
 
+const Mode = enum {
+    push,
+    pull,
+};
+
 pub fn main(init: std.process.Init) !void {
     const arena: std.mem.Allocator = init.arena.allocator();
 
     const args = try init.minimal.args.toSlice(arena);
-    for (args) |arg| {
-        std.log.info("arg: {s}", .{arg});
+    if (args.len < 3) {
+        // printUsage
+        return error.IncorrectArguments;
     }
+    const mode: Mode = parseMode(args[1]) orelse {
+        // printUsage
+        return error.IncorrectMode;
+    };
+
     const io = init.io;
 
     var stdout_buffer: [1024]u8 = undefined;
     var stdout_file_writer: Io.File.Writer = .init(.stdout(), io, &stdout_buffer);
     const stdout_writer = &stdout_file_writer.interface;
-
     const home = init.environ_map.get("HOME").?;
-    const db_path = try std.fs.path.join(arena, &.{ home, ".weg" });
+    const db_file_path = try weg.getDBFilePath(arena, home);
 
-    var push_buffer: [1024]u8 = undefined;
-    var push_file: Io.File = try std.Io.Dir.createFileAbsolute(io, db_path, .{ .truncate = false });
-    var push_file_writer = push_file.writer(io, &push_buffer);
-    try push_file_writer.seekTo(try push_file.length(io));
+    switch (mode) {
+        .pull => std.debug.print("nothing yet", .{}),
+        .push => {
+            const ts = std.Io.Clock.real.now(io);
+            try weg.push(io, db_file_path, args[2], ts);
+        },
+    }
 
-    try weg.push(&push_file_writer.interface, "/home/tchaudhry/", 12312312);
-
-    try push_file_writer.flush();
     try stdout_writer.flush();
+}
+
+fn parseMode(mode: []const u8) ?Mode {
+    return std.meta.stringToEnum(Mode, mode);
 }
