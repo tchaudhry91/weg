@@ -2,13 +2,13 @@
 const std = @import("std");
 const Io = std.Io;
 
-pub fn push(io: Io, db_path: []const u8, chpwd_path: []const u8, timestamp: Io.Timestamp) !void {
+pub fn push(io: Io, db_path: []const u8, chpwd_path: []const u8) !void {
     var push_buffer: [1024]u8 = undefined;
     var push_file: Io.File = try std.Io.Dir.createFileAbsolute(io, db_path, .{ .truncate = false });
     defer push_file.close(io);
     var push_file_writer = push_file.writer(io, &push_buffer);
     try push_file_writer.seekTo(try push_file.length(io));
-    try push_file_writer.interface.print("{d}:{s}\n", .{ timestamp.toSeconds(), chpwd_path });
+    try push_file_writer.interface.print("{s}\n", .{chpwd_path});
     try push_file_writer.flush();
 }
 
@@ -27,9 +27,7 @@ pub fn pull(allocator: std.mem.Allocator, io: Io, db_path: []const u8, query: []
     var lines = std.mem.splitScalar(u8, data, '\n');
     while (lines.next()) |line| {
         // Remove the timestamp
-        const split = std.mem.cutScalar(u8, line, ':') orelse continue;
-        var l = split.@"1";
-        l = std.mem.trim(u8, l, "\t\n ");
+        const l = std.mem.trim(u8, line, "\t\n ");
         if (std.ascii.findIgnoreCase(l, query) != null) {
             ret = l;
         }

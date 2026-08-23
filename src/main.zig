@@ -38,8 +38,7 @@ pub fn main(init: std.process.Init) !void {
             }
         },
         .push => {
-            const ts = std.Io.Clock.real.now(io);
-            try weg.push(io, db_file_path, args[2], ts);
+            try weg.push(io, db_file_path, args[2]);
         },
     }
 
