@@ -12,6 +12,6 @@ pub fn push(io: Io, db_path: []const u8, chpwd_path: []const u8, timestamp: Io.T
     try push_file_writer.flush();
 }
 
-pub fn getDBFilePath(allocator: std.mem.Allocator, home: []const u8) ![]const u8 {
-    return std.fs.path.join(allocator, &.{ home, ".weg" });
+pub fn getDBFilePath(allocator: std.mem.Allocator, home: []const u8, weg_db_var: ?[]const u8) ![]const u8 {
+    return weg_db_var orelse std.fs.path.join(allocator, &.{ home, ".weg.db" });
 }

@@ -27,7 +27,8 @@ pub fn main(init: std.process.Init) !void {
     var stdout_file_writer: Io.File.Writer = .init(.stdout(), io, &stdout_buffer);
     const stdout_writer = &stdout_file_writer.interface;
     const home = init.environ_map.get("HOME").?;
-    const db_file_path = try weg.getDBFilePath(arena, home);
+    const weg_db_var = init.environ_map.get("WEG_DB");
+    const db_file_path = try weg.getDBFilePath(arena, home, weg_db_var);
 
     switch (mode) {
         .pull => std.debug.print("nothing yet", .{}),
