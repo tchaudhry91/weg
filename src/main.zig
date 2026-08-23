@@ -38,7 +38,10 @@ pub fn main(init: std.process.Init) !void {
             }
         },
         .push => {
-            try weg.push(io, db_file_path, args[2]);
+            const db_size = try weg.push(io, db_file_path, args[2]);
+            if (db_size > 10000) {
+                // compact
+            }
         },
     }
 
