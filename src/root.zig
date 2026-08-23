@@ -15,3 +15,24 @@ pub fn push(io: Io, db_path: []const u8, chpwd_path: []const u8, timestamp: Io.T
 pub fn getDBFilePath(allocator: std.mem.Allocator, home: []const u8, weg_db_var: ?[]const u8) ![]const u8 {
     return weg_db_var orelse std.fs.path.join(allocator, &.{ home, ".weg.db" });
 }
+
+pub fn pull(allocator: std.mem.Allocator, io: Io, db_path: []const u8, query: []const u8) !?[]const u8 {
+    var ret: ?[]const u8 = null;
+    const data = std.Io.Dir.cwd().readFileAlloc(io, db_path, allocator, .unlimited) catch |err| switch (err) {
+        error.FileNotFound => {
+            return null;
+        },
+        else => return err,
+    };
+    var lines = std.mem.splitScalar(u8, data, '\n');
+    while (lines.next()) |line| {
+        // Remove the timestamp
+        const split = std.mem.cutScalar(u8, line, ':') orelse continue;
+        var l = split.@"1";
+        l = std.mem.trim(u8, l, "\t\n ");
+        if (std.mem.find(u8, l, query) != null) {
+            ret = l;
+        }
+    }
+    return ret;
+}

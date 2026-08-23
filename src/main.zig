@@ -31,7 +31,12 @@ pub fn main(init: std.process.Init) !void {
     const db_file_path = try weg.getDBFilePath(arena, home, weg_db_var);
 
     switch (mode) {
-        .pull => std.debug.print("nothing yet", .{}),
+        .pull => {
+            const ret = try weg.pull(arena, io, db_file_path, args[2]);
+            if (ret) |path| {
+                try stdout_writer.print("{s}", .{path});
+            }
+        },
         .push => {
             const ts = std.Io.Clock.real.now(io);
             try weg.push(io, db_file_path, args[2], ts);
