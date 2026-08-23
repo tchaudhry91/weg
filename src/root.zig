@@ -30,7 +30,7 @@ pub fn pull(allocator: std.mem.Allocator, io: Io, db_path: []const u8, query: []
         const split = std.mem.cutScalar(u8, line, ':') orelse continue;
         var l = split.@"1";
         l = std.mem.trim(u8, l, "\t\n ");
-        if (std.mem.find(u8, l, query) != null) {
+        if (std.ascii.findIgnoreCase(l, query) != null) {
             ret = l;
         }
     }
