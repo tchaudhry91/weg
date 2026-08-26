@@ -35,3 +35,34 @@ pub fn pull(allocator: std.mem.Allocator, io: Io, db_path: []const u8, query: []
     }
     return ret;
 }
+
+pub fn compact(allocator: std.mem.Allocator, io: Io, db_path: []const u8) !void {
+    const data = try std.Io.Dir.cwd().readFileAlloc(io, db_path, allocator, .unlimited);
+    var lines = std.mem.splitBackwardsScalar(u8, data, '\n');
+    var compacted = try std.ArrayList([]const u8).initCapacity(allocator, 10);
+    defer compacted.deinit(allocator);
+
+    var seen = std.StringHashMap(void).init(allocator);
+    defer seen.deinit();
+
+    while (lines.next()) |line| {
+        if (line.len == 0) {
+            continue;
+        }
+        const exists = try seen.getOrPut(line);
+        if (exists.found_existing) {
+            continue;
+        }
+        try compacted.append(allocator, line);
+    }
+    std.mem.reverse([]const u8, compacted.items);
+    var af_buffer: [1024]u8 = undefined;
+    var af = try std.Io.Dir.cwd().createFileAtomic(io, db_path, .{ .replace = true });
+    defer af.deinit(io);
+    var compacted_file_writer = af.file.writer(io, &af_buffer);
+    for (compacted.items) |line| {
+        try compacted_file_writer.interface.print("{s}\n", .{line});
+    }
+    try compacted_file_writer.flush();
+    try af.replace(io);
+}
