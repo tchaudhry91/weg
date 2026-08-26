@@ -27,7 +27,7 @@ pub fn pull(allocator: std.mem.Allocator, io: Io, db_path: []const u8, query: []
     };
     var lines = std.mem.splitScalar(u8, data, '\n');
     while (lines.next()) |line| {
-        // Remove the timestamp
+        // Trim whitespace
         const l = std.mem.trim(u8, line, "\t\n ");
         if (std.ascii.findIgnoreCase(l, query) != null) {
             ret = l;
